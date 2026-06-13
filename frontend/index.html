@@ -317,20 +317,38 @@ function bootApp(){
   }
   
   console.log('🎭 Hiding login view, showing app view');
-  $('loginView').classList.add('hidden');
-  $('appView').classList.remove('hidden');
+  try {
+    $('loginView').classList.add('hidden');
+    $('appView').classList.remove('hidden');
+  } catch(e) {
+    console.error('❌ Error toggling views:', e);
+  }
   
   console.log('📝 Setting user info: ' + USER.full_name + ' (' + USER.role + ')');
-  $('whoami').textContent = USER.full_name;
-  $('roleTag').textContent = USER.role.toUpperCase();
+  try {
+    $('whoami').textContent = USER.full_name;
+    $('roleTag').textContent = USER.role.toUpperCase();
+  } catch(e) {
+    console.error('❌ Error setting user info:', e);
+  }
   
   console.log('🔨 Building navigation...');
-  buildNav();
+  try {
+    buildNav();
+  } catch(e) {
+    console.error('❌ Error building nav:', e);
+  }
   
   console.log('📍 Navigating to home...');
-  navigate('home');
+  try {
+    navigate('home');
+  } catch(e) {
+    console.error('❌ Error navigating:', e);
+    const main = $('main');
+    if(main) main.innerHTML = `<div style="padding:20px;color:red"><h3>Error Loading View</h3><p>${e.message}</p></div>`;
+  }
   
-  console.log('✅ bootApp completed successfully');
+  console.log('✅ bootApp completed');
 }
 
 function icon(path){ return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="${path}"/></svg>`; }
@@ -372,30 +390,37 @@ function navigate(v){
   if(currentViewCleanup){ try{ currentViewCleanup(); }catch(e){} currentViewCleanup=null; }
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.v===v));
   const main=$('main');
-  main.innerHTML = `<div id="view-${v}" class="view active"></div>`;
+  main.innerHTML = `<div id="view-${v}" class="view active" style="padding:20px"><p>Loading...</p></div>`;
   const el = $('view-'+v);
   try{
+    let rendered = false;
     if(USER.role==='admin'){
-      if(v==='home') return renderAdminVault(el);
-      if(v==='compiler') return renderCompiler(el,true);
-      if(v==='transmit') return renderTransmit(el);
-      if(v==='proctor') return renderProctorCenter(el);
-      if(v==='live') return renderProctorLive(el);
+      if(v==='home') { renderAdminVault(el); rendered=true; }
+      else if(v==='compiler') { renderCompiler(el,true); rendered=true; }
+      else if(v==='transmit') { renderTransmit(el); rendered=true; }
+      else if(v==='proctor') { renderProctorCenter(el); rendered=true; }
+      else if(v==='live') { renderProctorLive(el); rendered=true; }
     }
-    if(USER.role==='teacher'){
-      if(v==='home') return renderTeacherUpload(el);
-      if(v==='myqs') return renderTeacherMine(el);
-      if(v==='compiler') return renderCompiler(el,false);
-      if(v==='live') return renderProctorLive(el);
+    else if(USER.role==='teacher'){
+      if(v==='home') { renderTeacherUpload(el); rendered=true; }
+      else if(v==='myqs') { renderTeacherMine(el); rendered=true; }
+      else if(v==='compiler') { renderCompiler(el,false); rendered=true; }
+      else if(v==='live') { renderProctorLive(el); rendered=true; }
     }
-    if(USER.role==='student'){
-      if(v==='home') return renderStudentTerminal(el);
-      if(v==='live') return renderProctorLive(el,true);
+    else if(USER.role==='student'){
+      if(v==='home') { renderStudentTerminal(el); rendered=true; }
+      else if(v==='live') { renderProctorLive(el,true); rendered=true; }
     }
-    console.warn(`⚠️ No view matched: ${v} for role ${USER.role}`);
+    
+    if(!rendered) {
+      console.warn(`⚠️ No view matched: ${v} for role ${USER.role}`);
+      el.innerHTML = `<div style="padding:20px"><p>View not available</p></div>`;
+    }
+    console.log(`✅ View rendered: ${v}`);
   }catch(e){
     console.error(`❌ Error rendering view ${v}:`, e);
-    el.textContent = `Error: ${e.message}`;
+    console.error(e.stack);
+    el.innerHTML = `<div style="padding:20px;color:red"><h3>Error Loading View</h3><pre>${e.message}\n${e.stack}</pre></div>`;
   }
 }
 
