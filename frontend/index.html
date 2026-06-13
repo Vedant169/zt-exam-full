@@ -280,16 +280,25 @@ async function doLogin(){
   $('loginErr').textContent='';
   const btn=$('loginBtn'); btn.disabled=true; btn.textContent='Signing in…';
   try{
+    console.log('🔓 Attempting login...');
     const data = await api('/api/auth/login', {method:'POST', body:{email: $('loginEmail').value.trim(), password: $('loginPass').value}});
+    console.log('✅ Login successful, response:', data);
+    
     TOKEN = data.access_token;
     USER = {full_name: data.full_name, role: data.role, email: $('loginEmail').value.trim()};
+    
+    console.log('💾 Storing token and user to localStorage...');
     localStorage.setItem('zt_token', TOKEN);
     localStorage.setItem('zt_user', JSON.stringify(USER));
+    
+    console.log('🚀 Calling bootApp...');
     bootApp();
+    console.log('✅ bootApp completed');
+    
   }catch(e){
     const apiUrl = API || 'same-origin (relative)';
     $('loginErr').textContent = 'Login failed: ' + e.message.slice(0,100);
-    console.error('Login error:', e);
+    console.error('❌ Login error:', e);
     toast('Login failed');
   }finally{ btn.disabled=false; btn.textContent='Continue →'; }
 }
@@ -301,13 +310,27 @@ $('logoutBtn').addEventListener('click', logout);
 
 /* ---------- App shell ---------- */
 function bootApp(){
-  if(!TOKEN||!USER) return;
+  console.log('📋 bootApp called. TOKEN:', !!TOKEN, 'USER:', !!USER);
+  if(!TOKEN||!USER) {
+    console.warn('⚠️ bootApp: Missing TOKEN or USER, returning');
+    return;
+  }
+  
+  console.log('🎭 Hiding login view, showing app view');
   $('loginView').classList.add('hidden');
   $('appView').classList.remove('hidden');
+  
+  console.log('📝 Setting user info: ' + USER.full_name + ' (' + USER.role + ')');
   $('whoami').textContent = USER.full_name;
   $('roleTag').textContent = USER.role.toUpperCase();
+  
+  console.log('🔨 Building navigation...');
   buildNav();
+  
+  console.log('📍 Navigating to home...');
   navigate('home');
+  
+  console.log('✅ bootApp completed successfully');
 }
 
 function icon(path){ return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="${path}"/></svg>`; }
@@ -345,27 +368,34 @@ function buildNav(){
 
 let currentViewCleanup = null;
 function navigate(v){
+  console.log(`📍 Navigating to view: ${v} (role: ${USER.role})`);
   if(currentViewCleanup){ try{ currentViewCleanup(); }catch(e){} currentViewCleanup=null; }
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.v===v));
   const main=$('main');
   main.innerHTML = `<div id="view-${v}" class="view active"></div>`;
   const el = $('view-'+v);
-  if(USER.role==='admin'){
-    if(v==='home') return renderAdminVault(el);
-    if(v==='compiler') return renderCompiler(el,true);
-    if(v==='transmit') return renderTransmit(el);
-    if(v==='proctor') return renderProctorCenter(el);
-    if(v==='live') return renderProctorLive(el);
-  }
-  if(USER.role==='teacher'){
-    if(v==='home') return renderTeacherUpload(el);
-    if(v==='myqs') return renderTeacherMine(el);
-    if(v==='compiler') return renderCompiler(el,false);
-    if(v==='live') return renderProctorLive(el);
-  }
-  if(USER.role==='student'){
-    if(v==='home') return renderStudentTerminal(el);
-    if(v==='live') return renderProctorLive(el,true);
+  try{
+    if(USER.role==='admin'){
+      if(v==='home') return renderAdminVault(el);
+      if(v==='compiler') return renderCompiler(el,true);
+      if(v==='transmit') return renderTransmit(el);
+      if(v==='proctor') return renderProctorCenter(el);
+      if(v==='live') return renderProctorLive(el);
+    }
+    if(USER.role==='teacher'){
+      if(v==='home') return renderTeacherUpload(el);
+      if(v==='myqs') return renderTeacherMine(el);
+      if(v==='compiler') return renderCompiler(el,false);
+      if(v==='live') return renderProctorLive(el);
+    }
+    if(USER.role==='student'){
+      if(v==='home') return renderStudentTerminal(el);
+      if(v==='live') return renderProctorLive(el,true);
+    }
+    console.warn(`⚠️ No view matched: ${v} for role ${USER.role}`);
+  }catch(e){
+    console.error(`❌ Error rendering view ${v}:`, e);
+    el.textContent = `Error: ${e.message}`;
   }
 }
 
