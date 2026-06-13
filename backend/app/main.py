@@ -73,31 +73,40 @@ def register(inp: schemas.RegisterIn, db: Session = Depends(get_db)):
     token = auth.create_access_token({"sub": u.email, "role": u.role})
     return {"access_token": token, "role": u.role, "full_name": u.full_name}
 
-@app.post("/api/auth/login", response_model=schemas.Token)
+@app.post("/api/auth/login")
 def login(inp: schemas.LoginIn, db: Session = Depends(get_db)):
     try:
+        print(f"🔐 Login attempt: {inp.email}")
         user = db.query(models.User).filter(models.User.email == inp.email).first()
+        
         if not user:
-            print(f"❌ Login failed: user {inp.email} not found")
-            raise HTTPException(401, "Invalid credentials")
+            print(f"❌ User not found: {inp.email}")
+            # List all users for debugging
+            all_users = db.query(models.User).all()
+            print(f"📋 Available users: {[u.email for u in all_users]}")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
         
         if not auth.verify_password(inp.password, user.password_hash):
-            print(f"❌ Login failed: password mismatch for {inp.email}")
-            raise HTTPException(401, "Invalid credentials")
+            print(f"❌ Password mismatch for {inp.email}")
+            raise HTTPException(status_code=401, detail="Invalid credentials")
         
         token = auth.create_access_token({"sub": user.email, "role": user.role})
         response = {
             "access_token": token, 
+            "token_type": "bearer",
             "role": user.role, 
             "full_name": user.full_name
         }
         print(f"✅ Login success: {inp.email} ({user.role})")
         return response
+        
     except HTTPException:
         raise
     except Exception as e:
         print(f"❌ Login error: {type(e).__name__}: {str(e)}")
-        raise HTTPException(500, f"Server error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
 # ---------- Teacher ----------
 @app.post("/api/teacher/questions/bulk")

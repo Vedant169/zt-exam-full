@@ -249,8 +249,21 @@ async function api(path, opts={}) {
   console.log(`📡 API Request: ${opts.method || 'GET'} ${fullUrl}`);
   const r = await fetch(fullUrl, opts);
   console.log(`📡 Response: ${r.status} ${r.statusText}`);
-  if(!r.ok){ const txt = await r.text(); console.error('API Error:', txt); throw new Error(txt.slice(0,240)); }
-  return r.json();
+  
+  const txt = await r.text();
+  console.log(`📡 Response body: ${txt.slice(0,200)}`);
+  
+  if(!r.ok){ 
+    console.error('API Error:', txt); 
+    throw new Error(txt.slice(0,240)); 
+  }
+  
+  try {
+    return txt ? JSON.parse(txt) : {};
+  } catch(e) {
+    console.error('JSON parse error. Response text:', txt);
+    throw new Error(`Invalid JSON response: ${txt.slice(0,100)}`);
+  }
 }
 
 /* ---------- login ---------- */
