@@ -227,16 +227,14 @@ textarea.input{min-height:140px;font-family:var(--mono);font-size:13px}
 const $ = id => document.getElementById(id);
 
 // Environment-aware API base URL
-// 1. Check localStorage override (set by user or deployment script)
-// 2. Check window.ZT_API_BASE (can be injected via <script>)
-// 3. Check process.env.REACT_APP_API_BASE if using build tools
-// 4. Use relative /api path for same-origin deployment
-// 5. Fallback to localhost for local development
+// For localhost: use http://localhost:8000
+// For same-origin production: use empty string (relative paths)
+// For cross-origin production: use injected URL or build-time env
 const API = localStorage.getItem('zt_api') 
   || window.ZT_API_BASE 
   || (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE)
-  || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : '/api')
-  || '/api';
+  || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : '')
+  || '';
 
 const toast = (msg)=>{ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._tid); toast._tid=setTimeout(()=>t.classList.remove('show'), 2400); };
 
