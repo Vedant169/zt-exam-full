@@ -361,30 +361,33 @@ def proctor_sessions(user: models.User = Depends(auth.require_role("admin","proc
         })
     return out
 
-@app.get("/")
-def root():
-    return {"ok": True, "name": "ZT-EXAM API"}
-
 # ========== STATIC FILE SERVING FOR SPA ==========
 # Serve frontend static files and index.html for all non-API routes
 frontend_dir = os.path.join(os.path.dirname(__file__), "../../frontend")
+index_file = os.path.join(frontend_dir, "index.html")
 
-if os.path.isdir(frontend_dir):
-    # Mount static files (CSS, JS, images, etc.)
-    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+# Root path - serve index.html for SPA
+@app.get("/", include_in_schema=False)
+async def serve_root():
+    if os.path.exists(index_file):
+        return FileResponse(index_file, media_type="text/html")
+    return {"ok": True, "name": "ZT-EXAM API"}
+
+# Catch-all route: serve index.html for SPA routing (all other paths)
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str):
+    # Don't interfere with API routes, WebSocket, or docs
+    if any(full_path.startswith(p) for p in ["api/", "ws/", "docs", "redoc", "openapi"]):
+        raise HTTPException(status_code=404)
     
-    # Catch-all route: serve index.html for SPA routing
-    @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
-        # Don't catch API routes, WebSocket, or docs
-        if full_path.startswith(("api/", "ws/", "docs", "redoc", "openapi")):
-            raise HTTPException(status_code=404)
-        
-        # Serve index.html for all other routes (SPA routing)
-        index_path = os.path.join(frontend_dir, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
-        raise HTTPException(status_code=404, detail="Frontend not found")
+    # Serve index.html for all other routes (SPA routing)
+    if os.path.exists(index_file):
+        return FileResponse(index_file, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Frontend not found")
+
+# Mount static files (CSS, JS, images, etc.) - after catch-all
+if os.path.isdir(frontend_dir):
+    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
 # ========== DEPLOYMENT EXPORTS ==========
 # For Vercel / serverless: the ASGI app is exposed at module level (above)
