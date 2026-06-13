@@ -75,11 +75,29 @@ def register(inp: schemas.RegisterIn, db: Session = Depends(get_db)):
 
 @app.post("/api/auth/login", response_model=schemas.Token)
 def login(inp: schemas.LoginIn, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == inp.email).first()
-    if not user or not auth.verify_password(inp.password, user.password_hash):
-        raise HTTPException(401, "Invalid credentials")
-    token = auth.create_access_token({"sub": user.email, "role": user.role})
-    return {"access_token": token, "role": user.role, "full_name": user.full_name}
+    try:
+        user = db.query(models.User).filter(models.User.email == inp.email).first()
+        if not user:
+            print(f"❌ Login failed: user {inp.email} not found")
+            raise HTTPException(401, "Invalid credentials")
+        
+        if not auth.verify_password(inp.password, user.password_hash):
+            print(f"❌ Login failed: password mismatch for {inp.email}")
+            raise HTTPException(401, "Invalid credentials")
+        
+        token = auth.create_access_token({"sub": user.email, "role": user.role})
+        response = {
+            "access_token": token, 
+            "role": user.role, 
+            "full_name": user.full_name
+        }
+        print(f"✅ Login success: {inp.email} ({user.role})")
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Login error: {type(e).__name__}: {str(e)}")
+        raise HTTPException(500, f"Server error: {str(e)}")
 
 # ---------- Teacher ----------
 @app.post("/api/teacher/questions/bulk")
@@ -405,21 +423,19 @@ async def serve_root():
         return FileResponse(index_file, media_type="text/html")
     return {"ok": True, "name": "ZT-EXAM API"}
 
-# Catch-all route: serve index.html for SPA routing (all other paths)
-@app.get("/{full_path:path}", include_in_schema=False)
+# Catch-all route: serve index.html for SPA routing (ONLY for non-API paths)
+# This must be last so specific routes (like POST /api/auth/login) match first
+@app.api_route("/{full_path:path}", methods=["GET", "HEAD"], include_in_schema=False)
 async def serve_spa(full_path: str):
-    # Don't interfere with API routes, WebSocket, or docs
-    if any(full_path.startswith(p) for p in ["api/", "ws/", "docs", "redoc", "openapi"]):
-        raise HTTPException(status_code=404)
+    # Block API, WebSocket, docs routes - let them 404 if not found
+    if full_path.startswith(("api/", "ws/", "docs", "redoc", "openapi", "static")):
+        raise HTTPException(status_code=404, detail="Not found")
     
-    # Serve index.html for all other routes (SPA routing)
+    # Serve index.html for all other paths (SPA routing)
     if os.path.exists(index_file):
         return FileResponse(index_file, media_type="text/html")
+    
     raise HTTPException(status_code=404, detail="Frontend not found")
-
-# Mount static files (CSS, JS, images, etc.) - after catch-all
-if os.path.isdir(frontend_dir):
-    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
 # ========== DEPLOYMENT EXPORTS ==========
 # For Vercel / serverless: the ASGI app is exposed at module level (above)
