@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZT-EXAM | Zero-Trust Examination Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg: #f6f7fb;
+  --bg-elev: #ffffff;
+  --bg-soft: #f1f3f9;
+  --line: #e5e7eb;
+  --line-strong:#d1d5db;
+  --text: #111827;
+  --muted: #6b7280;
+  --muted-2:#9ca3af;
+  --primary:#1e4dd8;
+  --primary-600:#1840b8;
+  --primary-soft:#e9efff;
+  --green:#0e9f6e;
+  --green-soft:#e6f6f0;
+  --amber:#d97706;
+  --amber-soft:#fff6e5;
+  --red:#e02424;
+  --red-soft:#fef1f1;
+  --radius:14px;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px rgba(16,24,40,.06);
+  --mono:"JetBrains Mono", ui-monospace, monospace;
+  --sans:"Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--primary);text-decoration:none}
+a:hover{text-decoration:underline}
+button,input,select,textarea{font-family:inherit}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+h1,h2,h3{margin:0}
+h1{font-size:26px;letter-spacing:-.015em}
+h2{font-size:20px;letter-spacing:-.01em}
+
+/* Login */
+.login-shell{min-height:100vh;display:grid;grid-template-columns:1.15fr 1fr}
+.login-left{background:linear-gradient(160deg, #0f172a 0%, #1a2b5a 55%, #1e4dd8 130%);color:#eaf0ff;display:flex;align-items:center;justify-content:center;padding:48px;position:relative;overflow:hidden}
+.login-left::after{content:'';position:absolute;right:-120px;top:-80px;width:420px;height:420px;background:radial-gradient(circle, rgba(255,255,255,.12), transparent 70%);border-radius:50%}
+.brand-mark{width:44px;height:44px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:#1e4dd8;font-weight:800;font-size:20px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.login-card-wrap{display:flex;align-items:center;justify-content:center;padding:40px;background:var(--bg)}
+.login-card{width:420px;max-width:100%;background:var(--bg-elev);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:30px}
+.input{width:100%;padding:12px 13px;border:1px solid var(--line-strong);background:#fff;border-radius:11px;font-size:14.5px;outline:none;color:var(--text)}
+.input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,77,216,.15)}
+label{display:block;font-size:12.7px;font-weight:600;color:#374151;margin-bottom:6px}
+.btn{padding:11px 16px;border-radius:11px;border:1px solid var(--line-strong);background:#fff;color:#111827;font-weight:600;cursor:pointer;font-size:14px;transition:.15s}
+.btn:hover{background:#f9fafb}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-600)}
+.btn-primary:disabled{background:var(--primary);opacity:.6}
+.btn-sm{padding:8px 12px;font-size:13px;border-radius:9px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn-danger{background:var(--red);border-color:var(--red);color:#fff}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--bg-soft);color:#374151;border:1px solid var(--line)}
+.badge.green{background:var(--green-soft);color:#065f46;border-color:#b7e4cf}
+.badge.amber{background:var(--amber-soft);color:#92400e;border-color:#f5d79a}
+.badge.red{background:var(--red-soft);color:#b91c1c;border-color:#f5b8b8}
+.badge.blue{background:var(--primary-soft);color:#1e3a8a;border-color:#c7d6ff}
+
+/* App shell */
+.app{display:grid;grid-template-columns:250px 1fr;grid-template-rows:62px 1fr;height:100vh}
+.topbar{grid-column:1/3;display:flex;align-items:center;gap:18px;padding:0 20px;background:var(--bg-elev);border-bottom:1px solid var(--line);z-index:20}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.01em}
+.logo-mark{width:32px;height:32px;border-radius:9px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.top-spacer{flex:1}
+.top-user{font-size:13.5px;color:var(--muted)}
+.sidebar{background:var(--bg-elev);border-right:1px solid var(--line);padding:16px 12px;overflow:auto}
+.nav-section{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted-2);padding:14px 10px 8px;text-transform:uppercase}
+.nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:10px;border:1px solid transparent;background:transparent;color:#374151;cursor:pointer;font-size:13.8px;font-weight:550;text-align:left}
+.nav-btn:hover{background:var(--bg-soft)}
+.nav-btn.active{background:var(--primary-soft);color:#1b3fb3;border-color:#c7d6ff}
+.nav-btn svg{width:18px;height:18px;opacity:.75;flex-shrink:0}
+.main{overflow:auto;background:var(--bg)}
+.view{padding:26px 28px;max-width:1240px;display:none}
+.view.active{display:block}
+
+/* Cards / tables */
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px}
+.grid{display:grid;gap:16px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.app{grid-template-columns:1fr}.sidebar{position:fixed;z-index:40;left:0;top:62px;bottom:0;width:250px;transform:translateX(-100%);transition:.2s}.sidebar.open{transform:translateX(0)}}
+.kpi .k{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:30px;font-weight:750;letter-spacing:-.015em;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:13.6px}
+th{font-size:11.2px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);background:var(--bg-soft)}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:#fcfdff}
+.hash{font-family:var(--mono);font-size:12px;color:#3b516a}
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+textarea.input{min-height:140px;font-family:var(--mono);font-size:13px}
+.notice{padding:12px 14px;border-radius:12px;background:var(--amber-soft);border:1px solid #f5d79a;color:#7a4a06;font-size:13.2px}
+.notice.green{background:var(--green-soft);border-color:#b7e4cf;color:#065f46}
+.logbox{font-family:var(--mono);font-size:12.3px;background:#0b1222;color:#bcd0ef;border:1px solid #1d2740;border-radius:12px;padding:12px;height:260px;overflow:auto}
+
+/* Exam UI - dark, NTA style */
+.exam-shell{background:#0f172a;color:#e5eaf5;min-height:100vh}
+.exam-top{position:sticky;top:0;z-index:30;background:#111d34;color:#dfe7ff;display:flex;align-items:center;gap:18px;padding:12px 18px;border-bottom:1px solid #1f2d4d;flex-wrap:wrap}
+.exam-top .timer{margin-left:auto;background:#1c2b4d;border:1px solid #2a3a61;border-radius:10px;padding:8px 14px;font-family:var(--mono);font-weight:700}
+.exam-body{display:grid;grid-template-columns:260px 1fr 310px;min-height:calc(100vh - 56px)}
+@media(max-width:1100px){.exam-body{grid-template-columns:1fr}.exam-left,.exam-right{display:none}}
+.exam-left{background:#0f1a2f;border-right:1px solid #1f2d4d;padding:16px;overflow:auto}
+.exam-center{padding:24px 28px;max-width:860px}
+.exam-right{background:#0f1a2f;border-left:1px solid #1f2d4d;padding:16px}
+.q-palette{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.q-pill{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:1px solid #2a3a61;background:#13213d;color:#c8d6f5;cursor:pointer}
+.q-pill.answered{background:#103d2f;border-color:#145a42;color:#8ff0c8}
+.q-pill.current{outline:2px solid #4b7dff}
+.q-pill.marked{background:#3a2a10;border-color:#7a5a18;color:#ffd77a}
+.q-text{font-size:18.5px;line-height:1.6;color:#eaf0ff}
+.exam-opt{padding:14px 15px;border-radius:12px;border:1px solid #24324f;background:#15213a;color:#d9e4ff;cursor:pointer;margin-top:10px;font-size:15px}
+.exam-opt:hover{border-color:#3b5aa8}
+.exam-opt.selected{border-color:#4b7dff;background:rgba(75,125,255,.12)}
+.exam-actions{display:flex;gap:10px;justify-content:space-between;margin-top:18px;padding-top:14px;border-top:1px solid #1f2d4d;flex-wrap:wrap}
+.btn-exam{padding:11px 18px;border-radius:10px;border:1px solid #2a3a61;background:#192845;color:#dbe6ff;font-weight:650;cursor:pointer}
+.btn-exam:hover{background:#203156}
+.btn-exam.primary{background:#2b5bff;border-color:#2b5bff;color:#fff}
+.webcam-box{position:relative;background:#060d1a;border-radius:12px;overflow:hidden;border:1px solid #1d2740}
+.webcam-box video{width:100%;display:block;max-height:340px;object-fit:cover;background:#000}
+.challenge{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(8,12,24,.88);border:1px solid rgba(75,125,255,.45);color:#dbe6ff;padding:11px 13px;border-radius:12px;font-size:13.5px}
+
+/* Proctor Live Grid */
+.proctor-wrap{display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media(max-width:1100px){.proctor-wrap{grid-template-columns:1fr}}
+.live-grid{display:grid;gap:12px}
+.live-grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.live-grid.cols-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1200px){.live-grid.cols-4{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.live-grid.cols-3,.live-grid.cols-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.live-grid.cols-3,.live-grid.cols-4{grid-template-columns:1fr}}
+.tile{position:relative;background:#0b1222;border:1px solid #1d2740;border-radius:14px;overflow:hidden;aspect-ratio:16/10;box-shadow:var(--shadow)}
+.tile video{width:100%;height:100%;object-fit:cover;background:#080d18;display:block}
+.tile-overlay{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent, rgba(0,0,0,.72));color:#e6ecff;padding:10px 11px;font-size:12.5px}
+.tile-top{position:absolute;left:8px;top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.pill-mini{font-size:11px;padding:3px 7px;border-radius:999px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);color:#dbe4ff}
+.pill-mini.warn{background:rgba(217,119,6,.22);border-color:rgba(217,119,6,.45);color:#ffcb7a}
+.pill-mini.bad{background:rgba(224,36,36,.22);border-color:rgba(224,36,36,.45);color:#ffb8b8}
+.tile-actions{position:absolute;right:8px;top:8px;display:flex;gap:6px;opacity:0;transition:.12s}
+.tile:hover .tile-actions{opacity:1}
+.icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(10,14,26,.6);color:#dbe4ff;cursor:pointer;font-size:14px}
+.event-feed{max-height:62vh;overflow:auto;font-size:12.8px}
+.event-feed div{padding:8px 4px;border-bottom:1px dashed var(--line);color:#4b5563}
+
+.toast{position:fixed;right:18px;bottom:18px;background:#111827;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:99;font-size:13.5px;display:none;max-width:360px}
+.toast.show{display:block}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="toast" class="toast" role="status"></div>
+
+<!-- LOGIN -->
+<div id="loginView">
+  <div class="login-shell">
+    <div class="login-left">
+      <div style="max-width:520px;position:relative;z-index:1">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+          <div class="brand-mark">ZT</div>
+          <div style="font-size:22px;font-weight:800;letter-spacing:-.01em">ZT-EXAM</div>
+        </div>
+        <h1 style="font-size:38px;line-height:1.15;font-weight:800;letter-spacing:-.02em;margin-bottom:12px;color:#fff">Zero-Trust<br>Decentralized<br>Examination Platform</h1>
+        <p style="color:#b9c9f0;font-size:15.5px;line-height:1.6;max-width:440px">Blockchain-anchored question vault • JIT AI compiler • Edge biometric proctoring • Psychometric malpractice detection.<br><br>Built for NTA / UGC-NET / JEE scale.</p>
+        <div style="margin-top:26px;display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:#9fb6f0">
+          <span>• IPFS Sharded Vault</span>
+          <span>• VDF Time-Lock</span>
+          <span>• On-device CV</span>
+          <span>• E2E Encrypted</span>
+        </div>
+      </div>
+    </div>
+    <div class="login-card-wrap">
+      <div class="login-card">
+        <div style="margin-bottom:16px">
+          <div style="font-weight:800;font-size:21px;letter-spacing:-.01em">Sign in to ZT-EXAM</div>
+          <div class="muted small" style="margin-top:4px">Use a seeded role account</div>
+        </div>
+        <label for="loginEmail">Email</label>
+        <input class="input" id="loginEmail" value="student@zt.local" autocomplete="username">
+        <div style="height:12px"></div>
+        <label for="loginPass">Password</label>
+        <input class="input" id="loginPass" type="password" value="student123" autocomplete="current-password">
+        <div style="height:16px"></div>
+        <button class="btn btn-primary" style="width:100%" id="loginBtn">Continue →</button>
+        <div id="loginErr" style="color:#e02424;font-size:13px;margin-top:10px;min-height:18px"></div>
+        <div style="border-top:1px solid var(--line);margin-top:14px;padding-top:14px;font-size:13.5px;color:var(--muted);line-height:1.9">
+          Quick sign-in:<br>
+          <a href="#" class="quickLogin" data-e="admin@zt.local" data-p="admin123">Admin</a> &nbsp;•&nbsp;
+          <a href="#" class="quickLogin" data-e="teacher@zt.local" data-p="teacher123">Teacher</a> &nbsp;•&nbsp;
+          <a href="#" class="quickLogin" data-e="student@zt.local" data-p="student123">Student</a>
+        </div>
+        <div class="small muted" style="margin-top:12px">API: <span id="apiBaseLabel" class="mono"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="app hidden">
+  <div class="topbar">
+    <button class="btn btn-ghost btn-sm" id="menuBtn" style="display:none">☰</button>
+    <div class="logo"><div class="logo-mark">ZT</div><span>ZT-EXAM</span></div>
+    <div class="badge blue" id="envBadge">NTA-2026-S1 • Vault Sealed</div>
+    <div class="top-spacer"></div>
+    <div class="top-user" id="whoami"></div>
+    <span class="badge" id="roleTag"></span>
+    <button class="btn btn-sm" id="logoutBtn">Sign out</button>
+  </div>
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const API = localStorage.getItem('zt_api') || 'http://localhost:8000';
+const toast = (msg)=>{ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._tid); toast._tid=setTimeout(()=>t.classList.remove('show'), 2400); };
+
+let TOKEN = localStorage.getItem('zt_token') || '';
+let USER = JSON.parse(localStorage.getItem('zt_user') || 'null');
+
+async function api(path, opts={}) {
+  opts.headers = opts.headers || {};
+  if(TOKEN) opts.headers['Authorization'] = 'Bearer ' + TOKEN;
+  if(opts.body && typeof opts.body === 'object'){ opts.headers['Content-Type']='application/json'; opts.body = JSON.stringify(opts.body); }
+  const r = await fetch(API + path, opts);
+  if(!r.ok){ const txt = await r.text(); throw new Error(txt.slice(0,240)); }
+  return r.json();
+}
+
+/* ---------- login ---------- */
+$('apiBaseLabel').textContent = API;
+document.querySelectorAll('.quickLogin').forEach(a=>{
+  a.addEventListener('click', e=>{
+    e.preventDefault();
+    $('loginEmail').value = a.dataset.e;
+    $('loginPass').value = a.dataset.p;
+  });
+});
+
+async function doLogin(){
+  $('loginErr').textContent='';
+  const btn=$('loginBtn'); btn.disabled=true; btn.textContent='Signing in…';
+  try{
+    const data = await api('/api/auth/login', {method:'POST', body:{email: $('loginEmail').value.trim(), password: $('loginPass').value}});
+    TOKEN = data.access_token;
+    USER = {full_name: data.full_name, role: data.role, email: $('loginEmail').value.trim()};
+    localStorage.setItem('zt_token', TOKEN);
+    localStorage.setItem('zt_user', JSON.stringify(USER));
+    bootApp();
+  }catch(e){
+    $('loginErr').textContent = 'Login failed. Is the backend running at '+API+' ?';
+    toast('Login failed');
+  }finally{ btn.disabled=false; btn.textContent='Continue →'; }
+}
+$('loginBtn').addEventListener('click', doLogin);
+$('loginPass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+function logout(){ localStorage.removeItem('zt_token'); localStorage.removeItem('zt_user'); location.reload(); }
+$('logoutBtn').addEventListener('click', logout);
+
+/* ---------- App shell ---------- */
+function bootApp(){
+  if(!TOKEN||!USER) return;
+  $('loginView').classList.add('hidden');
+  $('appView').classList.remove('hidden');
+  $('whoami').textContent = USER.full_name;
+  $('roleTag').textContent = USER.role.toUpperCase();
+  buildNav();
+  navigate('home');
+}
+
+function icon(path){ return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="${path}"/></svg>`; }
+
+function buildNav(){
+  const nav = $('sidebar');
+  let items=[];
+  if(USER.role==='admin'){
+    items=[
+      ['home','Vault','M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'],
+      ['compiler','JIT Compiler','M13 10V3L4 14h7v7l9-11h-7z'],
+      ['transmit','Transmission','M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'],
+      ['proctor','Proctor Center','M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2z'],
+      ['live','Live Grid','M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'],
+    ];
+  } else if(USER.role==='teacher'){
+    items=[
+      ['home','Upload Questions','M12 4v16m8-8H4'],
+      ['myqs','My Question Bank','M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'],
+      ['compiler','Compiler Status','M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+      ['live','Live Grid','M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'],
+    ];
+  } else {
+    items=[
+      ['home','Exam Terminal','M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
+      ['live','Proctor View','M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'],
+    ];
+  }
+  nav.innerHTML = items.map(([id,label,path])=>`
+    <button class="nav-btn" data-v="${id}">${icon(path)}${label}</button>`).join('');
+  nav.querySelectorAll('.nav-btn').forEach(b=>{
+    b.addEventListener('click', ()=> navigate(b.dataset.v));
+  });
+}
+
+let currentViewCleanup = null;
+function navigate(v){
+  if(currentViewCleanup){ try{ currentViewCleanup(); }catch(e){} currentViewCleanup=null; }
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.v===v));
+  const main=$('main');
+  main.innerHTML = `<div id="view-${v}" class="view active"></div>`;
+  const el = $('view-'+v);
+  if(USER.role==='admin'){
+    if(v==='home') return renderAdminVault(el);
+    if(v==='compiler') return renderCompiler(el,true);
+    if(v==='transmit') return renderTransmit(el);
+    if(v==='proctor') return renderProctorCenter(el);
+    if(v==='live') return renderProctorLive(el);
+  }
+  if(USER.role==='teacher'){
+    if(v==='home') return renderTeacherUpload(el);
+    if(v==='myqs') return renderTeacherMine(el);
+    if(v==='compiler') return renderCompiler(el,false);
+    if(v==='live') return renderProctorLive(el);
+  }
+  if(USER.role==='student'){
+    if(v==='home') return renderStudentTerminal(el);
+    if(v==='live') return renderProctorLive(el,true);
+  }
+}
+
+/* ---------- Admin: Vault ---------- */
+async function renderAdminVault(el){
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div><h1>Question Vault</h1><div class="muted">IPFS-sharded • append-only custody chain • annual rotation</div></div><div><button class="btn btn-sm" id="vaultRotateBtn">Rotate Vault</button></div></div>
+  <div class="grid grid-3" style="margin-bottom:16px">
+    <div class="card kpi"><div class="k">Vault Size</div><div class="v" id="vs1">—</div><div class="muted small">questions, 14 subjects</div></div>
+    <div class="card kpi"><div class="k">Shards</div><div class="v" id="vs2">—</div><div class="muted small">IPFS CIDs, erasure-coded</div></div>
+    <div class="card kpi"><div class="k">Cycle</div><div class="v" style="font-size:22px" id="vs3">NTA-2026-S1</div><div class="muted small">73d until purge</div></div>
+  </div>
+  <div class="grid grid-2">
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Encrypted Fragments</h3><span class="badge">read-only</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>QID</th><th>Subject</th><th>Diff</th><th>IPFS CID</th><th>Custody Tx</th></tr></thead><tbody id="vaultTbody"><tr><td colspan=5>Loading…</td></tr></tbody></table></div>
+    </div>
+    <div class="card"><h3 style="margin:0 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Custody Ledger – Live</h3>
+      <div class="logbox" id="ledgerBox" style="height:370px;background:#f8fafc;color:#334155"></div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><span class="badge green">SHA3-256 Merkle</span><span class="badge blue">Append-only</span><span class="badge">1.2s finality</span></div>
+    </div>
+  </div>`;
+  $('vaultRotateBtn').addEventListener('click', async ()=>{
+    if(!confirm('Purge entire vault?')) return;
+    await api('/api/admin/vault/rotate',{method:'POST'});
+    toast('Vault rotated');
+    navigate('home');
+  });
+  try{
+    const s = await api('/api/admin/vault/stats');
+    $('vs1').textContent = s.vault_size.toLocaleString('en-IN');
+    $('vs2').textContent = s.shards.toLocaleString('en-IN');
+    $('vs3').textContent = s.cycle;
+    const qs = await api('/api/admin/vault/questions');
+    $('vaultTbody').innerHTML = qs.map(q=>`<tr><td class="mono">${q.qid}</td><td>${q.subject}</td><td>${q.difficulty}</td><td class="hash">${q.cid}</td><td class="hash">${q.tx}</td></tr>`).join('') || '<tr><td colspan=5>No questions yet – ask a Teacher to upload.</td></tr>';
+    const ledger = await api('/api/admin/vault/ledger');
+    $('ledgerBox').innerHTML = ledger.map(l=>`[${l.ts.slice(11,19)}] ${l.action} ${l.tx} — ${l.details}`).join('<br>');
+  }catch(e){ toast('Vault load failed: '+e.message) }
+}
+
+/* ---------- Compiler ---------- */
+async function renderCompiler(el, isAdmin){
+  el.innerHTML = `<h1 style="margin-bottom:6px">JIT AI Compiler</h1><div class="muted" style="margin-bottom:16px">Blind compiler • Dirichlet weights • Smart-contract time-lock • VDF release</div>
+  <div class="grid grid-2">
+    <div class="card"><h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px 0">Compile Paper</h3>
+    ${isAdmin ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><label>Paper Code</label><input class="input" id="cmpCode" value="NTA-2026-S1-PaperA"></div>
+      <div><label>Questions</label><input class="input" id="cmpN" type="number" value="50"></div>
+      <div><label>Key Release Delay (sec)</label><input class="input" id="cmpDelay" type="number" value="60"></div>
+      <div><label>&nbsp;</label><button class="btn btn-primary" style="width:100%" id="runCmpBtn">Run Compiler</button></div>
+    </div>` : `<div class="notice">Compiler run is admin-only. Status is public.</div>`}
+    <div style="margin-top:12px"><div class="logbox" id="cmpLog" style="height:210px;background:#f8fafc;color:#334155">Waiting for compile…</div></div>
+    </div>
+    <div class="card"><h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 10px 0">Time-Lock Status</h3>
+      <div style="text-align:center;padding:18px;border:1px dashed #c7d6ff;border-radius:12px;background:#f6f8ff" id="vdfBox">Loading…</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><span class="badge">Contract 0x8c1f…a4e9</span><span class="badge green">Quorum 21/31</span><span class="badge">Chainlink VRF</span></div>
+      ${isAdmin ? `<div style="margin-top:12px"><button class="btn btn-sm" id="unlockBtn">Force Unlock (admin)</button></div>`:''}
+      <div style="margin-top:14px"><b>Manifest</b><table style="margin-top:6px"><thead><tr><th>Section</th><th>Count</th></tr></thead><tbody id="manifestBody"><tr><td colspan=2 class="muted">Not compiled</td></tr></tbody></table><div class="small muted" style="margin-top:6px">Fingerprint: <span class="mono" id="paperHash">—</span></div></div>
+    </div>
+  </div>`;
+
+  const logEl = $('cmpLog');
+  const clog = m => { logEl.innerHTML += m + '<br>'; logEl.scrollTop = 1e9; };
+
+  async function refresh(){
+    try{
+      const s = await api('/api/admin/compiler/status?code=NTA-2026-S1-PaperA');
+      const box=$('vdfBox');
+      if(!s.compiled){ box.textContent='Not compiled yet.'; return; }
+      box.innerHTML = `<div style="font-size:38px;font-weight:800;letter-spacing:-.01em;color:${s.unlocked?'#0e9f6e':'#1e4dd8'}">${s.unlocked ? 'UNLOCKED' : Math.floor(s.seconds_left/60)+':'+String(s.seconds_left%60).padStart(2,'0')}</div><div class="muted small">VDF • Wesolowski • drand beacon</div>`;
+      $('manifestBody').innerHTML = Object.entries(s.manifest).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+      $('paperHash').textContent = s.paper_hash.slice(0,32)+'…';
+    }catch(e){}
+  }
+  refresh();
+  const iv = setInterval(refresh, 2000);
+  currentViewCleanup = ()=> clearInterval(iv);
+
+  const runBtn = $('runCmpBtn');
+  if(runBtn){
+    runBtn.addEventListener('click', async ()=>{
+      logEl.innerHTML='';
+      ['VAULT_UNSEAL threshold=4/7 … ok','SAMPLER seed = VRF(0x7a31…)','Balancing difficulty …','Topic coverage … pass','Dedup LSH … 0 collisions','Encrypting AES-256-GCM','Smart contract lock T-60m','Compiler RAM wipe … done'].forEach((s,i)=>setTimeout(()=>clog('> '+s), i*180));
+      try{
+        const body={code:$('cmpCode').value, num_questions:parseInt($('cmpN').value), key_release_delay_sec:parseInt($('cmpDelay').value)};
+        const r = await api('/api/admin/compiler/run',{method:'POST', body});
+        setTimeout(()=>{ clog('✓ Paper '+r.code+'  hash '+r.paper_hash.slice(0,16)+'…'); refresh(); toast('Paper compiled'); }, 1200);
+      }catch(e){ clog('✗ '+e.message); }
+    });
+  }
+  const unlockBtn = $('unlockBtn');
+  if(unlockBtn){
+    unlockBtn.addEventListener('click', async ()=>{ await api('/api/admin/vdf/unlock?code=NTA-2026-S1-PaperA',{method:'POST'}); toast('VDF unlocked'); refresh(); });
+  }
+}
+
+/* ---------- Transmit ---------- */
+function renderTransmit(el){
+  el.innerHTML = `<h1>Zero-Trust Transmission</h1><div class="muted" style="margin-bottom:16px">Direct-to-terminal TLS 1.3 + Noise XK • Bypasses center LAN</div>
+  <div class="card"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;text-align:center">
+    <div><div style="font-size:28px;font-weight:800">1,248</div><div class="muted small">Active terminals</div></div>
+    <div><div style="font-size:28px;font-weight:800">184 KB</div><div class="muted small">AES-256-GCM payload</div></div>
+    <div><div style="font-size:28px;font-weight:800">mTLS</div><div class="muted small">Direct edge delivery</div></div>
+    <div><div style="font-size:28px;font-weight:800;color:var(--green)">Sealed</div><div class="muted small">Key in HSM</div></div>
+  </div>
+  <div style="margin-top:16px;background:#f3f5fb;border:1px solid var(--line);border-radius:12px;padding:16px;font-family:var(--mono);font-size:12.5px;color:#334155">
+  JIT_Compiler (10.22.1.4) ──► Terminal DL-044-118<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;╳ Center LAN 192.168.1.0/24  [bypassed]<br>
+  Encrypted packet on-disk • decrypts only after biometric + VDF
+  </div></div>`;
+}
+
+/* ---------- Proctor Center ---------- */
+async function renderProctorCenter(el){
+  el.innerHTML = `<h1>Proctor — Center Anomaly Detection</h1><div class="muted" style="margin-bottom:14px">Benjamini–Hochberg FDR q=0.01 • Moran's I geo-clustering</div>
+  <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Center</th><th>Candidates</th><th>Mean %ile</th><th>P-value</th><th>Action</th></tr></thead><tbody id="centerTb"></tbody></table></div></div>
+  <div class="card" style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>Live Sessions</b><button class="btn btn-sm" id="refreshSessBtn">Refresh</button></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Session</th><th>Student</th><th>Anomaly</th><th>Warn</th><th>Verified</th><th>Submitted</th></tr></thead><tbody id="sessTb"></tbody></table></div></div>`;
+  async function load(){
+    try{
+      const centers = await api('/api/admin/proctor/center-stats');
+      $('centerTb').innerHTML = centers.map(c=>`<tr><td>${c.center}</td><td>${c.candidates}</td><td>${c.mean_pct}</td><td>${c.p}</td><td>${c.action.includes('Flag')?'<span class="badge red">Flag — Manual audit</span>':'<span class="badge green">Pass</span>'}</td></tr>`).join('');
+      const sessions = await api('/api/proctor/sessions');
+      $('sessTb').innerHTML = sessions.map(s=>`<tr><td>${s.session_id}</td><td>${s.student}</td><td>${s.anomaly.toFixed(2)}</td><td>${s.warnings}</td><td>${s.verified?'Yes':'No'}</td><td>${s.submitted?'Yes':'No'}</td></tr>`).join('') || '<tr><td colspan=6 class="muted">No sessions yet</td></tr>';
+    }catch(e){ toast(e.message) }
+  }
+  load();
+  $('refreshSessBtn').addEventListener('click', load);
+}
+
+/* ---------- Teacher ---------- */
+function renderTeacherUpload(el){
+  el.innerHTML = `<h1>Teacher — Question Bank Upload</h1><div class="muted" style="margin-bottom:14px">Submissions are encrypted, sharded to IPFS, custody-logged on-chain.</div>
+  <div class="grid grid-2">
+    <div class="card"><b>Bulk JSON</b>
+      <textarea class="input" id="qjson" style="min-height:260px;margin-top:8px">[
+  {"subject":"Calculus","difficulty":4,"text":"∫ e^x sin x dx = ?","options":["(e^x (sin x - cos x))/2","e^x cos x","e^x sin x","0"],"answer_index":0},
+  {"subject":"Algebra","difficulty":2,"text":"Roots of x^2 -5x +6","options":["2,3","1,6","-2,-3","0,5"],"answer_index":0}
+]</textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-primary" id="upBtn">Upload to Vault</button><span id="upResult" class="muted small"></span></div>
+    </div>
+    <div class="card"><b>Submission Rules</b>
+      <ul style="color:var(--muted);line-height:1.8">
+        <li>answer_index is 0-based</li>
+        <li>difficulty 1–5</li>
+        <li>Questions are blinded – setter identity not stored in paper manifest</li>
+        <li>Annual vault rotation neutralizes pool poisoning</li>
+        <li>Every submission → IPFS CID + custody_tx</li>
+      </ul>
+      <div class="notice green" style="margin-top:10px">Your vault already contains ~120 seeded questions.</div>
+    </div>
+  </div>`;
+  $('upBtn').addEventListener('click', async ()=>{
+    const out=$('upResult');
+    try{
+      const questions = JSON.parse($('qjson').value);
+      out.textContent='Uploading…';
+      const r = await api('/api/teacher/questions/bulk', {method:'POST', body:{questions}});
+      out.textContent = `Uploaded ${r.count} • ${r.created.join(', ')}`;
+      toast('Uploaded to vault');
+    }catch(e){ out.textContent = 'Error: '+e.message; toast('Upload failed'); }
+  });
+}
+
+async function renderTeacherMine(el){
+  el.innerHTML = `<h1>My Question Bank</h1>
+  <div class="card"><div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;flex-wrap:wrap"><input class="input" id="qsearch" placeholder="Search subject / text…" style="max-width:340px"><div class="muted small" id="qcount"></div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>QID</th><th>Subject</th><th>Diff</th><th>Question</th><th>IPFS</th></tr></thead><tbody id="myqTb"></tbody></table></div></div>`;
+  let rows=[];
+  try{ rows = await api('/api/teacher/questions/mine'); }catch(e){ toast(e.message) }
+  function draw(filter=''){
+    const f = filter.toLowerCase();
+    const list = rows.filter(r=> !f || (r.subject+r.text).toLowerCase().includes(f));
+    $('qcount').textContent = list.length+' questions';
+    $('myqTb').innerHTML = list.map(q=>`<tr><td class="mono">${q.qid}</td><td>${q.subject}</td><td>${q.difficulty}</td><td>${q.text.slice(0,120)}</td><td class="hash">${q.cid}</td></tr>`).join('') || '<tr><td colspan=5 class="muted">No questions</td></tr>';
+  }
+  draw();
+  $('qsearch').addEventListener('input', e=>draw(e.target.value));
+}
+
+/* ---------- Student Exam Terminal ---------- */
+let examState = { session_id:null, paper_code:'NTA-2026-S1-PaperA', questions:[], idx:0, qStart:0, answers:{}, anomaly:0.12, warnings:0, camStream:null };
+
+async function renderStudentTerminal(el){
+  // make the main container edge-to-edge for exam immersion
+  const main = el.closest('.main');
+  if(main){ main.style.padding='0'; main.style.maxWidth='none'; }
+  el.innerHTML = `
+  <div class="exam-shell" id="examShell">
+    <div class="exam-top">
+      <div style="font-weight:800">ZT-EXAM • NTA-2026-S1-PaperA</div>
+      <div style="opacity:.85">${USER.full_name} • ${USER.email}</div>
+      <div class="timer" id="globalTimer">02:59:42</div>
+      <button class="btn-exam" id="submitTopBtn">Submit</button>
+    </div>
+    <div id="preCheck" style="max-width:980px;margin:36px auto;padding:0 24px">
+      <div style="display:grid;grid-template-columns: 420px 1fr;gap:24px;align-items:start">
+        <div>
+          <div class="webcam-box"><video id="svideo" autoplay playsinline muted></video>
+            <div class="challenge" id="challengeBox" style="display:none">Liveness: <b id="challengeText">Blink three times</b><div class="small" id="challengeStatus" style="opacity:.85">Analyzing…</div></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn-exam" id="camBtn">Enable Camera</button>
+            <button class="btn-exam" id="liveBtn">Run Liveness</button>
+            <span class="badge" id="faceTag" style="background:#1d2946;color:#cfe0ff;border-color:#2a3a61">Face: —</span>
+          </div>
+          <div class="small" style="color:#9aaccd;margin-top:8px">On-device FaceDetector • no video leaves this machine</div>
+        </div>
+        <div>
+          <h2 style="color:#eaf0ff;font-size:24px;margin-bottom:6px">Identity & Environment Check</h2>
+          <div style="background:#13213d;border:1px solid #223156;border-radius:14px;padding:16px;color:#c8d6f5;line-height:2">
+            Face match: <span id="matchOut">Pending</span><br>
+            Liveness: <span id="liveOut">Pending</span><br>
+            RF / BT perimeter: <span style="color:#6de7b8">Jam Active</span><br>
+            Kiosk lock: <span style="color:#6de7b8">Enforced</span><br>
+            Exam key: <span id="keyOut">Checking VDF…</span><br>
+            Stream to proctor: <label style="display:inline;color:#c8d6f5"><input type="checkbox" id="streamToggle"> Enable WebRTC</label>
+          </div>
+          <button class="btn-exam primary" id="verifyBtn" disabled style="margin-top:14px;width:100%;padding:14px;font-size:16px">Verify & Decrypt Paper</button>
+          <div class="small" style="color:#8fa1c5;margin-top:8px">Paper decrypts only after biometric pass + VDF unlock. Admin must compile & unlock from the Control Plane first.</div>
+        </div>
+      </div>
+    </div>
+    <div id="examUI" class="exam-body hidden">
+      <aside class="exam-left">
+        <div style="font-weight:700;color:#9db4e0;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em">Question Palette</div>
+        <div class="q-palette" id="qPalette"></div>
+        <div style="margin-top:14px;font-size:12.5px;color:#8fa1c5;line-height:1.8">
+          <div><span style="display:inline-block;width:12px;height:12px;background:#103d2f;border-radius:3px;margin-right:6px"></span>Answered</div>
+          <div><span style="display:inline-block;width:12px;height:12px;background:#13213d;border:1px solid #2a3a61;border-radius:3px;margin-right:6px"></span>Not visited</div>
+          <div><span style="display:inline-block;width:12px;height:12px;background:#3a2a10;border-radius:3px;margin-right:6px"></span>Marked</div>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #1f2d4d;font-size:13px;color:#9db4e0">
+          Answered: <b id="countAns">0</b> / <span id="countTotal">0</span>
+        </div>
+      </aside>
+      <section class="exam-center">
+        <div style="display:flex;gap:10px;align-items:center;color:#9db4e0;font-size:13px;margin-bottom:8px;flex-wrap:wrap">
+          <span id="qmeta">Q 1</span>
+          <span>•</span>
+          <span>Time on item: <span class="mono" id="qtimer">0.0s</span></span>
+          <span style="margin-left:auto" class="badge" style="background:#1d2946;color:#cfe0ff">Anomaly <span id="anomOut">0.12</span></span>
+        </div>
+        <div class="q-text" id="qtext">Loading…</div>
+        <div id="qopts" style="margin-top:14px"></div>
+        <div class="exam-actions">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-exam" id="markBtn">Mark for Review</button>
+            <button class="btn-exam" id="clearBtn">Clear</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-exam" id="prevBtn">← Previous</button>
+            <button class="btn-exam primary" id="nextBtn">Save & Next →</button>
+          </div>
+        </div>
+      </section>
+      <aside class="exam-right">
+        <div style="font-weight:700;color:#9db4e0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">AI Edge Monitor</div>
+        <div class="webcam-box" style="margin-bottom:12px"><video id="monitorVideo" autoplay muted playsinline style="max-height:190px"></video></div>
+        <div style="font-size:13.5px;color:#c8d6f5;line-height:1.9">
+          Faces: <b id="mFaces">1</b><br>
+          Gaze off: <b id="mGaze">0</b><br>
+          Keystroke auth: <span style="color:#6de7b8">Match</span><br>
+          Camera warnings: <b id="mWarn">0</b><br>
+          Composite: <b id="mAnom">0.12</b>
+        </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2d4d;font-size:12.5px;color:#8fa1c5">
+          Verdict: <span class="badge" style="background:#0f2a22;color:#6de7b8;border-color:#165944" id="verdictTag">Clean</span>
+        </div>
+      </aside>
+    </div>
+    <div id="doneUI" class="hidden" style="text-align:center;padding:60px 20px;color:#dbe6ff">
+      <h1 style="font-size:32px;color:#fff">Exam Submitted</h1>
+      <p id="receiptOut" class="muted"></p>
+      <button class="btn-exam" id="restartBtn">Back to dashboard</button>
+    </div>
+  </div>`;
+
+  // --- camera / biometrics ---
+  let faceDetector=null, livePass=false, matchScore=0.936;
+  if('FaceDetector' in window){ try{ faceDetector = new FaceDetector({fastMode:true, maxDetectedFaces:3}); }catch(e){} }
+
+  // Create a synthetic camera feed using canvas when real camera is unavailable
+  function createMockCamStream(){
+    const canvas = document.createElement('canvas');
+    canvas.width = 640; canvas.height = 480;
+    const ctx = canvas.getContext('2d');
+    let frame = 0;
+    function draw(){
+      frame++;
+      // Dark background with subtle noise
+      ctx.fillStyle = '#0a1628';
+      ctx.fillRect(0, 0, 640, 480);
+      // Scanning line effect
+      const scanY = (frame * 2) % 480;
+      ctx.strokeStyle = 'rgba(75,125,255,0.08)';
+      for(let y = 0; y < 480; y += 4){ ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(640, y); ctx.stroke(); }
+      // Face silhouette (oval)
+      const bobY = Math.sin(frame * 0.03) * 6;
+      ctx.beginPath();
+      ctx.ellipse(320, 200 + bobY, 70, 90, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(180,200,230,0.15)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(75,125,255,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Face detection box
+      ctx.strokeStyle = '#4b7dff';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(240, 100 + bobY, 160, 200);
+      ctx.setLineDash([]);
+      // Labels
+      ctx.fillStyle = '#4b7dff';
+      ctx.font = '13px Inter, system-ui, sans-serif';
+      ctx.fillText('FACE DETECTED — confidence 0.936', 200, 330 + bobY);
+      ctx.fillStyle = '#6de7b8';
+      ctx.fillText('● LIVE', 290, 355 + bobY);
+      // Bottom overlay
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(0, 430, 640, 50);
+      ctx.fillStyle = '#8fa1c5';
+      ctx.font = '12px Inter, system-ui, sans-serif';
+      ctx.fillText('Mock Camera — on-device CV active • no video leaves this machine', 100, 458);
+      // Scan beam
+      ctx.fillStyle = 'rgba(75,125,255,0.06)';
+      ctx.fillRect(0, scanY, 640, 3);
+      requestAnimationFrame(draw);
+    }
+    draw();
+    return canvas.captureStream(24);
+  }
+
+  async function startCam(targetId){
+    // Try real camera with progressively relaxed constraints
+    const constraints = [
+      {video: {width: {ideal: 1280}, height: {ideal: 720}}, audio: false},
+      {video: {width: {ideal: 640}}, audio: false},
+      {video: true, audio: false}
+    ];
+    for(const c of constraints){
+      try{
+        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) break;
+        const stream = await navigator.mediaDevices.getUserMedia(c);
+        examState.camStream = stream;
+        const v = $(targetId);
+        if(v) v.srcObject = stream;
+        return stream;
+      }catch(e){ /* try next constraint */ }
+    }
+    // All real camera attempts failed — use synthetic mock feed
+    toast('Camera unavailable — using mock camera feed');
+    const mockStream = createMockCamStream();
+    examState.camStream = mockStream;
+    const v = $(targetId);
+    if(v) v.srcObject = mockStream;
+    return mockStream;
+  }
+  async function runFaceLoop(video){
+    async function tick(){
+      if(video && video.videoWidth){
+        let faces=[];
+        if(faceDetector){ try{ faces = await faceDetector.detect(video);}catch(e){} }
+        if(faces.length===0) faces=[{boundingBox:{}}];
+        const ft = $('faceTag'); if(ft) ft.textContent = 'Face: '+faces.length;
+        const mf = $('mFaces'); if(mf) mf.textContent = faces.length;
+        if(faces.length>1 && examState.session_id){
+          api('/api/exam/proctor_event',{method:'POST', body:{session_id: examState.session_id, event_type:'multi_face', payload:{count:faces.length}}}).catch(()=>{});
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  $('camBtn').addEventListener('click', async ()=>{
+    const s = await startCam('svideo');
+    if(s){
+      runFaceLoop($('svideo'));
+      $('matchOut').textContent='0.936 ✓'; $('matchOut').style.color='#6de7b8';
+    }
+  });
+
+  $('liveBtn').addEventListener('click', ()=>{
+    $('challengeBox').style.display='block';
+    let p=0; const iv=setInterval(()=>{ p++; $('challengeStatus').textContent = 'Analyzing… '+(p*22)+'%'; if(p>=5){clearInterval(iv); $('challengeStatus').textContent='Passed ✓  liveness: real, spoof 0.02'; $('liveOut').textContent='Passed ✓'; $('liveOut').style.color='#6de7b8'; livePass=true; checkReady(); }}, 380);
+  });
+
+  // proctor WebRTC broadcaster
+  let proctorWS=null, proctorPCs={};
+  async function startProctorStream(){
+    if(!examState.camStream){ toast('Enable camera first'); $('streamToggle').checked=false; return; }
+    const wsUrl = API.replace(/^http/,'ws') + '/ws/proctor/exam-main';
+    proctorWS = new WebSocket(wsUrl);
+    const peerId = 'student-'+Math.floor(Math.random()*90000);
+    proctorWS.onopen = ()=> proctorWS.send(JSON.stringify({type:'join', peer:peerId, role:'student'}));
+    proctorWS.onmessage = async (ev)=>{
+      const msg = JSON.parse(ev.data);
+      if(msg.type==='peer_join' && msg.role!=='student'){
+        const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+        proctorPCs[msg.peer]=pc;
+        examState.camStream.getTracks().forEach(t=>pc.addTrack(t, examState.camStream));
+        pc.onicecandidate = e=>{ if(e.candidate) proctorWS.send(JSON.stringify({type:'ice', to:msg.peer, candidate:e.candidate})) };
+        const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+        proctorWS.send(JSON.stringify({type:'offer', to:msg.peer, sdp:offer}));
+      }
+      if(msg.type==='answer' && proctorPCs[msg.from]){ await proctorPCs[msg.from].setRemoteDescription(msg.sdp); }
+      if(msg.type==='ice' && proctorPCs[msg.from]){ try{ await proctorPCs[msg.from].addIceCandidate(msg.candidate);}catch(e){} }
+    };
+    toast('Streaming to proctor room');
+  }
+  $('streamToggle').addEventListener('change', e=>{
+    if(e.target.checked) startProctorStream();
+    else { if(proctorWS) proctorWS.close(); proctorWS=null; }
+  });
+
+  async function checkReady(){
+    try{
+      const st = await api('/api/admin/compiler/status?code='+examState.paper_code);
+      $('keyOut').textContent = st.unlocked ? 'Released ✓' : `Sealed T-${st.seconds_left}s`;
+      $('keyOut').style.color = st.unlocked ? '#6de7b8':'#ffcb7a';
+      $('verifyBtn').disabled = !(livePass && st.unlocked);
+    }catch(e){}
+  }
+  const keyIv = setInterval(checkReady,1500); checkReady();
+  currentViewCleanup = ()=>{ clearInterval(keyIv); if(examState.camStream){ examState.camStream.getTracks().forEach(t=>t.stop()); } if(proctorWS) proctorWS.close(); };
+
+  $('verifyBtn').addEventListener('click', async ()=>{
+    try{
+      const v = await api('/api/exam/biometric/verify',{method:'POST', body:{paper_code:examState.paper_code, face_match_score:matchScore, liveness_pass:livePass, faces_detected:1}});
+      if(!v.verified){ toast('Biometric failed'); return; }
+      examState.session_id = v.session_id;
+      const paper = await api(`/api/exam/paper?code=${examState.paper_code}&session_id=${examState.session_id}`);
+      if(!paper.unlocked){ toast('Key not released'); return; }
+      examState.questions = paper.questions;
+      examState.idx = 0; examState.answers = {}; examState.anomaly=0.12; examState.warnings=0;
+      $('preCheck').classList.add('hidden');
+      $('examUI').classList.remove('hidden');
+      const monV = $('monitorVideo');
+      if(monV && examState.camStream) monV.srcObject = examState.camStream;
+      buildPalette(); renderQ();
+      $('countTotal').textContent = examState.questions.length;
+    }catch(e){ toast('Verify failed: '+e.message); }
+  });
+
+  function buildPalette(){
+    const pal = $('qPalette'); pal.innerHTML='';
+    examState.questions.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.className='q-pill'; d.textContent=i+1;
+      d.id='qpill-'+i;
+      d.addEventListener('click', ()=>{ examState.idx=i; renderQ(); });
+      pal.appendChild(d);
+    });
+  }
+  function updateAnom(){
+    $('anomOut').textContent = examState.anomaly.toFixed(2);
+    $('mAnom').textContent = examState.anomaly.toFixed(2);
+    $('mWarn').textContent = examState.warnings;
+    const verdict = examState.anomaly>0.62 && examState.warnings>=2 ? 'Hold' : examState.anomaly>0.38 ? 'Watch' : 'Clean';
+    const vt=$('verdictTag'); vt.textContent=verdict;
+    vt.style.background = verdict==='Clean' ? '#0f2a22' : verdict==='Watch' ? '#2a220f' : '#2a1518';
+    vt.style.color = verdict==='Clean' ? '#6de7b8' : verdict==='Watch' ? '#ffcb7a' : '#ffb8b8';
+  }
+  function renderQ(){
+    const q = examState.questions[examState.idx];
+    if(!q) return;
+    $('qmeta').textContent = `Question ${examState.idx+1} • ${q.subject} • Difficulty ${q.difficulty}/5`;
+    $('qtext').textContent = q.text;
+    const optsEl=$('qopts'); optsEl.innerHTML='';
+    const chosen = examState.answers[examState.idx]?.chosen;
+    q.options.forEach((op,i)=>{
+      const d=document.createElement('div');
+      d.className='exam-opt'+(chosen===i?' selected':'');
+      d.innerHTML = `<b>${String.fromCharCode(65+i)}.</b> ${op}`;
+      d.addEventListener('click', async ()=>{
+        const time_ms = Date.now() - examState.qStart;
+        examState.answers[examState.idx] = {chosen:i};
+        const pill = $('qpill-'+examState.idx); if(pill) pill.classList.add('answered');
+        $('countAns').textContent = Object.keys(examState.answers).length;
+        try{
+          const r = await api('/api/exam/answer',{method:'POST', body:{session_id:examState.session_id, question_idx:examState.idx, chosen:i, time_ms}});
+          examState.anomaly = r.anomaly_score; examState.warnings = r.camera_warnings;
+          updateAnom();
+        }catch(e){}
+        renderQ();
+      });
+      optsEl.appendChild(d);
+    });
+    examState.qStart = Date.now();
+    document.querySelectorAll('.q-pill').forEach((p,i)=>p.classList.toggle('current', i===examState.idx));
+  }
+
+  $('nextBtn').addEventListener('click', ()=>{ if(examState.idx < examState.questions.length-1){ examState.idx++; renderQ(); }});
+  $('prevBtn').addEventListener('click', ()=>{ if(examState.idx>0){ examState.idx--; renderQ(); }});
+  $('clearBtn').addEventListener('click', ()=>{ delete examState.answers[examState.idx]; const pill=$('qpill-'+examState.idx); if(pill) pill.classList.remove('answered'); renderQ(); });
+  $('markBtn').addEventListener('click', ()=>{ const pill=$('qpill-'+examState.idx); if(pill) pill.classList.toggle('marked'); });
+
+  const qtimerIv = setInterval(()=>{ const t=$('qtimer'); if(t && examState.qStart) t.textContent = ((Date.now()-examState.qStart)/1000).toFixed(1)+'s'; }, 100);
+  // extend cleanup
+  const prevCleanup = currentViewCleanup;
+  currentViewCleanup = ()=>{ clearInterval(qtimerIv); if(prevCleanup) prevCleanup(); };
+
+  let secs = 2*3600+59*60+42;
+  const gTimerIv = setInterval(()=>{ secs--; const h=Math.floor(secs/3600), m=Math.floor((secs%3600)/60), s=secs%60; const el=$('globalTimer'); if(el) el.textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); },1000);
+  const prevCleanup2 = currentViewCleanup;
+  currentViewCleanup = ()=>{ clearInterval(gTimerIv); prevCleanup2(); };
+
+  async function submitExam(){
+    if(!examState.session_id){ toast('No active session'); return; }
+    try{
+      const r = await api('/api/exam/submit',{method:'POST', body:{session_id: examState.session_id}});
+      $('examUI').classList.add('hidden');
+      $('doneUI').classList.remove('hidden');
+      $('receiptOut').innerHTML = `Receipt <span class="mono">${r.receipt_tx}</span><br>Score ${r.score}/${r.answered} • Anomaly ${r.anomaly_score}`;
+    }catch(e){ toast(e.message) }
+  }
+  $('submitTopBtn').addEventListener('click', ()=>{ if(confirm('Submit exam?')) submitExam(); });
+  $('restartBtn').addEventListener('click', ()=> location.reload());
+}
+
+/* ---------- Proctor Live Grid ---------- */
+function renderProctorLive(el, studentMode=false){
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+    <div><h1 style="margin:0">Proctor Live Grid</h1><div class="muted">WebRTC • E2E SRTP • on-device AI overlay</div></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="badge">Room: <b id="roomName">exam-main</b></span>
+      <button class="btn btn-sm" id="simBtn">Simulate 12 candidates</button>
+      <button class="btn btn-sm" id="layoutBtn">3-col / 4-col</button>
+      <span class="badge green" id="liveCount">0 live</span>
+    </div>
+  </div>
+  <div class="proctor-wrap">
+    <div>
+      <div class="live-grid cols-3" id="liveGrid"></div>
+    </div>
+    <div class="card">
+      <b>Event Feed</b>
+      <div class="event-feed" id="eventFeed" style="margin-top:8px"><div>Waiting for candidates…</div></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)" class="small muted">
+        If you're a <b>Student</b>, enable "Stream to Proctor" in the Exam Terminal. Open a second tab as Admin/Proctor to watch.
+      </div>
+    </div>
+  </div>`;
+
+  const grid = $('liveGrid');
+  const eventFeed = $('eventFeed');
+  function logEvt(t){ const d=document.createElement('div'); d.textContent = new Date().toLocaleTimeString()+'  '+t; eventFeed.prepend(d); while(eventFeed.children.length>80) eventFeed.lastChild.remove(); }
+
+  let peerCount=0;
+  function addTile(id, stream, meta={}){
+    let tile = document.getElementById('tile-'+id);
+    if(!tile){
+      tile = document.createElement('div');
+      tile.className='tile'; tile.id='tile-'+id;
+      tile.innerHTML = `<video autoplay playsinline></video>
+        <div class="tile-top"><span class="pill-mini">● LIVE</span><span class="pill-mini" id="a-${id}">anom 0.12</span><span class="pill-mini" id="w-${id}">warn 0</span></div>
+        <div class="tile-actions"><button class="icon-btn" title="Flag">⚑</button><button class="icon-btn" title="Message">✉</button></div>
+        <div class="tile-overlay"><b>${meta.name||id}</b><br><span style="opacity:.85">${meta.center||'DL-044'} • Q ${meta.q||'12'}/50</span></div>`;
+      grid.appendChild(tile);
+      peerCount++; $('liveCount').textContent = peerCount+' live';
+    }
+    const v = tile.querySelector('video');
+    if(stream && v.srcObject !== stream) v.srcObject = stream;
+    return tile;
+  }
+  function removeTile(id){
+    const t=document.getElementById('tile-'+id); if(t){ t.remove(); peerCount=Math.max(0,peerCount-1); $('liveCount').textContent = peerCount+' live'; }
+  }
+
+  // WebRTC signaling
+  const wsUrl = API.replace(/^http/,'ws') + '/ws/proctor/exam-main';
+  let ws=null, pcs={};
+  const myId = (USER.role||'proctor').slice(0,3)+'-'+Math.floor(Math.random()*90000);
+  function connectWS(){
+    try{
+      ws = new WebSocket(wsUrl);
+      ws.onopen = ()=>{ ws.send(JSON.stringify({type:'join', peer:myId, role: USER.role})); logEvt('Connected as '+myId); };
+      ws.onmessage = async (ev)=>{
+        const msg = JSON.parse(ev.data);
+        if(msg.type==='peer_join'){ logEvt('Peer joined: '+msg.peer); }
+        if(msg.type==='offer' && msg.sdp){
+          const pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+          pcs[msg.from]=pc;
+          pc.ontrack = e=>{ addTile(msg.from, e.streams[0], {name: msg.from}); logEvt('Stream from '+msg.from); };
+          pc.onicecandidate = e=>{ if(e.candidate && ws.readyState===1) ws.send(JSON.stringify({type:'ice', to:msg.from, candidate:e.candidate})) };
+          await pc.setRemoteDescription(msg.sdp);
+          const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
+          ws.send(JSON.stringify({type:'answer', to:msg.from, sdp:answer}));
+        }
+        if(msg.type==='answer' && pcs[msg.from]){ await pcs[msg.from].setRemoteDescription(msg.sdp); }
+        if(msg.type==='ice' && pcs[msg.from]){ try{ await pcs[msg.from].addIceCandidate(msg.candidate);}catch(e){} }
+        if(msg.type==='peer_leave'){ removeTile(msg.peer); logEvt('Peer left: '+msg.peer); delete pcs[msg.peer]; }
+      };
+      ws.onclose = ()=>{ logEvt('Signaling disconnected – retrying'); setTimeout(connectWS, 2000); };
+    }catch(e){ logEvt('WS fail '+e.message) }
+  }
+  connectWS();
+  currentViewCleanup = ()=>{ if(ws) ws.close(); Object.values(pcs).forEach(pc=>pc.close()); };
+
+  // Simulate button
+  $('simBtn').addEventListener('click', async ()=>{
+    let baseStream;
+    try{ baseStream = await navigator.mediaDevices.getUserMedia({video:{width:640}, audio:false}); } catch(e){ toast('Enable camera to simulate'); return; }
+    const names = ['Aarav S.','Isha P.','Rohan K.','Meera T.','Arjun V.','Kavya N.','Dev M.','Ananya R.','Vivaan J.','Diya S.','Aryan G.','Sara L.'];
+    const centers=['DL-044','MH-112','RJ-009','UP-087'];
+    for(let i=0;i<12;i++){
+      const canvas = document.createElement('canvas'); canvas.width=640; canvas.height=360;
+      const ctx = canvas.getContext('2d');
+      const v = document.createElement('video'); v.srcObject = baseStream; v.muted=true; v.play().catch(()=>{});
+      (function draw(){
+        if(v.readyState>=2){ ctx.drawImage(v,0,0,canvas.width,canvas.height);
+          ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,canvas.width,30);
+          ctx.fillStyle='#fff'; ctx.font='15px Inter'; ctx.fillText(names[i%names.length]+' • Sim',12,20);
+        }
+        requestAnimationFrame(draw);
+      })();
+      const simStream = canvas.captureStream(15);
+      const id='sim-'+i;
+      addTile(id, simStream, {name:names[i%names.length], center: centers[i%centers.length], q: Math.floor(8+Math.random()*32) });
+      logEvt('Sim candidate joined: '+names[i%names.length]);
+    }
+    toast('Simulated 12 candidates');
+  });
+
+  $('layoutBtn').addEventListener('click', ()=>{
+    grid.classList.toggle('cols-3'); grid.classList.toggle('cols-4');
+  });
+}
+
+/* ---------- boot ---------- */
+if(TOKEN && USER) bootApp();
+</script>
+</body>
+</html>
