@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import json, hashlib, secrets
+import os
 
 from .database import Base, engine, get_db
 from . import models, schemas, auth, crypto_vault, compiler
@@ -361,6 +364,27 @@ def proctor_sessions(user: models.User = Depends(auth.require_role("admin","proc
 @app.get("/")
 def root():
     return {"ok": True, "name": "ZT-EXAM API"}
+
+# ========== STATIC FILE SERVING FOR SPA ==========
+# Serve frontend static files and index.html for all non-API routes
+frontend_dir = os.path.join(os.path.dirname(__file__), "../../frontend")
+
+if os.path.isdir(frontend_dir):
+    # Mount static files (CSS, JS, images, etc.)
+    app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
+    
+    # Catch-all route: serve index.html for SPA routing
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # Don't catch API routes, WebSocket, or docs
+        if full_path.startswith(("api/", "ws/", "docs", "redoc", "openapi")):
+            raise HTTPException(status_code=404)
+        
+        # Serve index.html for all other routes (SPA routing)
+        index_path = os.path.join(frontend_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        raise HTTPException(status_code=404, detail="Frontend not found")
 
 # ========== DEPLOYMENT EXPORTS ==========
 # For Vercel / serverless: the ASGI app is exposed at module level (above)
