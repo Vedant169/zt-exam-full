@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import json, hashlib, secrets
 import os
+import sys
 
 from .database import Base, engine, get_db
 from . import models, schemas, auth, crypto_vault, compiler
@@ -14,34 +15,51 @@ Base.metadata.create_all(bind=engine)
 
 # Auto-seed database on startup if empty
 def init_db():
+    """Initialize database with test users"""
     db = next(get_db())
     try:
-        # Check if users exist
         user_count = db.query(models.User).count()
+        print(f"📊 Current users in DB: {user_count}")
+        
         if user_count == 0:
-            # Seed test users
-            from . import auth
+            print("🌱 Seeding test users...")
             test_users = [
                 ("admin@zt.local", "admin123", "Admin User", "admin"),
                 ("teacher@zt.local", "teacher123", "Teacher User", "teacher"),
                 ("student@zt.local", "student123", "Student User", "student"),
             ]
-            for email, password, name, role in test_users:
+            
+            for email, pwd, name, role in test_users:
+                pwd_hash = auth.get_password_hash(pwd)
                 user = models.User(
                     email=email,
-                    password_hash=auth.get_password_hash(password),
+                    password_hash=pwd_hash,
                     full_name=name,
                     role=role,
                     a11y_profile="standard"
                 )
                 db.add(user)
+                print(f"  ✓ Created {role}: {email}")
+            
             db.commit()
-            print(f"✅ Seeded {len(test_users)} test users")
+            print(f"✅ Successfully seeded {len(test_users)} test users")
+        else:
+            # Show existing users
+            users = db.query(models.User).all()
+            emails = [u.email for u in users]
+            print(f"📋 Existing users: {emails}")
+            
     except Exception as e:
-        print(f"⚠️ Database init error: {e}")
+        print(f"❌ Database init error: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
     finally:
         db.close()
 
+# Initialize on startup
+print("=" * 60)
+print("🚀 ZT-EXAM Backend Starting")
+print("=" * 60)
 init_db()
 
 app = FastAPI(title="ZT-EXAM API", version="1.0")
@@ -49,11 +67,19 @@ app = FastAPI(title="ZT-EXAM API", version="1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Health check
+@app.get("/health", include_in_schema=False)
+def health():
+    db = next(get_db())
+    count = db.query(models.User).count()
+    db.close()
+    return {"status": "ok", "users": count}
 
 # ---------- Auth ----------
 @app.post("/api/auth/register", response_model=schemas.Token)
@@ -73,40 +99,25 @@ def register(inp: schemas.RegisterIn, db: Session = Depends(get_db)):
     token = auth.create_access_token({"sub": u.email, "role": u.role})
     return {"access_token": token, "role": u.role, "full_name": u.full_name}
 
-@app.post("/api/auth/login")
+@app.post("/api/auth/login", response_model=schemas.Token)
 def login(inp: schemas.LoginIn, db: Session = Depends(get_db)):
-    try:
-        print(f"🔐 Login attempt: {inp.email}")
-        user = db.query(models.User).filter(models.User.email == inp.email).first()
-        
-        if not user:
-            print(f"❌ User not found: {inp.email}")
-            # List all users for debugging
-            all_users = db.query(models.User).all()
-            print(f"📋 Available users: {[u.email for u in all_users]}")
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        if not auth.verify_password(inp.password, user.password_hash):
-            print(f"❌ Password mismatch for {inp.email}")
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        token = auth.create_access_token({"sub": user.email, "role": user.role})
-        response = {
-            "access_token": token, 
-            "token_type": "bearer",
-            "role": user.role, 
-            "full_name": user.full_name
-        }
-        print(f"✅ Login success: {inp.email} ({user.role})")
-        return response
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Login error: {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+    print(f"\n🔐 LOGIN: {inp.email}")
+    user = db.query(models.User).filter(models.User.email == inp.email).first()
+    
+    if not user or not auth.verify_password(inp.password, user.password_hash):
+        print(f"❌ Failed: {inp.email}")
+        all_users = db.query(models.User).all()
+        print(f"📋 Users: {[u.email for u in all_users]}")
+        raise HTTPException(401, "Invalid credentials")
+    
+    token = auth.create_access_token({"sub": user.email, "role": user.role})
+    print(f"✅ Success: {inp.email}")
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user.role,
+        "full_name": user.full_name
+    }
 
 # ---------- Teacher ----------
 @app.post("/api/teacher/questions/bulk")
