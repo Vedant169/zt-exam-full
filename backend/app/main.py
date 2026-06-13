@@ -361,3 +361,15 @@ def proctor_sessions(user: models.User = Depends(auth.require_role("admin","proc
 @app.get("/")
 def root():
     return {"ok": True, "name": "ZT-EXAM API"}
+
+# ========== DEPLOYMENT EXPORTS ==========
+# For Vercel / serverless: the ASGI app is exposed at module level (above)
+# For local development with uvicorn:
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        log_level="info"
+    )

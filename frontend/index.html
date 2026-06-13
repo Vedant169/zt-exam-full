@@ -225,7 +225,19 @@ textarea.input{min-height:140px;font-family:var(--mono);font-size:13px}
 <script>
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
-const API = localStorage.getItem('zt_api') || 'http://localhost:8000';
+
+// Environment-aware API base URL
+// 1. Check localStorage override (set by user or deployment script)
+// 2. Check window.ZT_API_BASE (can be injected via <script>)
+// 3. Check process.env.REACT_APP_API_BASE if using build tools
+// 4. Use relative /api path for same-origin deployment
+// 5. Fallback to localhost for local development
+const API = localStorage.getItem('zt_api') 
+  || window.ZT_API_BASE 
+  || (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_BASE)
+  || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : '/api')
+  || '/api';
+
 const toast = (msg)=>{ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._tid); toast._tid=setTimeout(()=>t.classList.remove('show'), 2400); };
 
 let TOKEN = localStorage.getItem('zt_token') || '';
