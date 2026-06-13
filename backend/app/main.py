@@ -12,6 +12,38 @@ from . import models, schemas, auth, crypto_vault, compiler
 
 Base.metadata.create_all(bind=engine)
 
+# Auto-seed database on startup if empty
+def init_db():
+    db = next(get_db())
+    try:
+        # Check if users exist
+        user_count = db.query(models.User).count()
+        if user_count == 0:
+            # Seed test users
+            from . import auth
+            test_users = [
+                ("admin@zt.local", "admin123", "Admin User", "admin"),
+                ("teacher@zt.local", "teacher123", "Teacher User", "teacher"),
+                ("student@zt.local", "student123", "Student User", "student"),
+            ]
+            for email, password, name, role in test_users:
+                user = models.User(
+                    email=email,
+                    password_hash=auth.get_password_hash(password),
+                    full_name=name,
+                    role=role,
+                    a11y_profile="standard"
+                )
+                db.add(user)
+            db.commit()
+            print(f"✅ Seeded {len(test_users)} test users")
+    except Exception as e:
+        print(f"⚠️ Database init error: {e}")
+    finally:
+        db.close()
+
+init_db()
+
 app = FastAPI(title="ZT-EXAM API", version="1.0")
 
 app.add_middleware(
