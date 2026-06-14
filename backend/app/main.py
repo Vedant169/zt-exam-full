@@ -433,8 +433,10 @@ def proctor_sessions(user: models.User = Depends(auth.require_role("admin","proc
 
 # ========== STATIC FILE SERVING FOR SPA ==========
 # Serve frontend static files and index.html for all non-API routes
-frontend_dir = os.path.join(os.path.dirname(__file__), "../../frontend")
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))
 index_file = os.path.join(frontend_dir, "index.html")
+print(f"📂 Frontend dir: {frontend_dir}")
+print(f"📂 index.html exists: {os.path.exists(index_file)}")
 
 # Root path - serve index.html for SPA
 @app.get("/", include_in_schema=False)
@@ -458,13 +460,14 @@ async def serve_spa(full_path: str):
     raise HTTPException(status_code=404, detail="Frontend not found")
 
 # ========== DEPLOYMENT EXPORTS ==========
-# For Vercel / serverless: the ASGI app is exposed at module level (above)
+# For Render / gunicorn: the ASGI app is exposed at module level (above)
 # For local development with uvicorn:
 if __name__ == "__main__":
     import uvicorn
+    port = int(os.getenv("PORT", "8000"))
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=port,
         log_level="info"
     )
